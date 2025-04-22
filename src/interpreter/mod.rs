@@ -36,10 +36,10 @@ pub fn interpret<'env>(expr: Value<'env>) -> Result<(), ()> {
             "lambda",
             inbuilt::lambda(env.clone()),
         ),
-        //env::Value(
-        //    "macro",
-        //    Value::Procedure(env.clone(), Rc::new(inbuilt::lambda_macro)),
-        //),
+        env::Value(
+            "macro",
+            inbuilt::lambda_macro(env.clone()),
+        ),
         env::Value(
             "begin",
             inbuilt::begin(env.clone())

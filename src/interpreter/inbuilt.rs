@@ -50,31 +50,30 @@ fn lambda_internal<'env>(
     Value::Procedure(env, procedure, Rc::new(DisplayList(bindings.clone())))
 }
 
-//pub fn lambda_macro<'env>(env: Env<'env>, exprs: &[Value<'env>]) -> EvalResult<'env> {
-//    match exprs {
-//        [arg, body] => lambda_macro_internal(env.clone(), arg.clone(), body.clone()),
-//        _ => panic!("{exprs:#?} did not match any forms of macro procedure \"macro\""),
-//    }
-//}
-//
-//fn lambda_macro_internal<'env>(
-//    env: Env<'env>,
-//    arg: Value<'env>,
-//    body: Value<'env>,
-//) -> EvalResult<'env> {
-//    match arg {
-//        Value::Symbol(arg_name) => {
-//            let procedure = Rc::new(move |env: Env<'env>, exprs: &[Value<'env>]| {
-//                eval(
-//                    env.bind(env::Value(arg_name, Value::List(Rc::from(exprs)))),
-//                    body.clone(),
-//                )
-//            });
-//            Ok(Value::Procedure(env, procedure, Rc::new(arg_name)))
-//        }
-//        _ => panic!("invalid binding symbol: {arg}"),
-//    }
-//}
+pub fn lambda_macro<'env>(env: Env<'env>) -> Value<'env> {
+    Value::Procedure(
+        env,
+        Rc::new(|env, exprs| match exprs {
+            [Value::Symbol(binding), body] => {
+                Ok(lambda_macro_internal(env.clone(), binding, body.clone()))
+            }
+            _ => panic!("{exprs:#?} did not match any forms of macro procedure \"macro\""),
+        }),
+        Rc::new("binding body"),
+    )
+}
+
+fn lambda_macro_internal<'env>(
+    env: Env<'env>,
+    binding: &'env str,
+    body: Value<'env>,
+) -> Value<'env> {
+    let procedure = Rc::new(move |env: Env<'env>, args: &[Value<'env>]| {
+        eval(env.bind(env::Value(binding, Value::List(Rc::from(args)))), body.clone())
+    });
+
+    Value::Procedure(env, procedure, Rc::new(binding))
+}
 
 pub fn bind_let<'env>(env: Env<'env>) -> Value<'env> {
     Value::Procedure(
@@ -199,22 +198,22 @@ fn define<'env>(env: Env<'env>, exprs: &[Value<'env>]) -> Result<Env<'env>, ()> 
                 panic!("{exprs:#?} did not match the define form \"(define (name args...) body)\"")
             }
         },
-        //[Value::Symbol("define-macro"), name_arg, body] => {
-        //    match name_arg {
-        //        Value::List(name_args) => match name_args.as_ref() {
-        //            [Value::Symbol(name), arg] => {
-        //                let value = lambda_macro_internal(env.clone(), arg.clone(), body.clone())?;
-        //                Ok(env.clone().bind(env::Value(*name, value)))
-        //            }
-        //            _ => panic!(
-        //            "{exprs:#?} did not match the define form \"(define-macro (name arg) body)\""
-        //        ),
-        //        },
-        //        _ => {
-        //            panic!("{exprs:#?} did not match the define form \"(define-macro (name arg) body)\"")
-        //        }
-        //    }
-        //}
+        [Value::Symbol("define-macro"), name_arg, body] => {
+            match name_arg {
+                Value::List(name_args) => match name_args.as_ref() {
+                    [Value::Symbol(name), Value::Symbol(binding)] => {
+                        let value = lambda_macro_internal(env.clone(), binding, body.clone());
+                        Ok(env.clone().bind(env::Value(*name, value)))
+                    }
+                    _ => panic!(
+                    "{exprs:#?} did not match the define form \"(define-macro (name arg) body)\""
+                ),
+                },
+                _ => {
+                    panic!("{exprs:#?} did not match the define form \"(define-macro (name arg) body)\"")
+                }
+            }
+        }
         _ => panic!(
             "{exprs:#?} did not match any forms of macro procedure \"define\" / \"define-macro\""
         ),

@@ -19,13 +19,18 @@
 ;;; this will run the function quote, and return the result
 
 ;;; Lambda:
-;;; (lambda (args...) body)
-;;; defines a procedure with arguments bound to the names in `args`
+;;; (lambda (binding...) body)
+;;; defines a procedure with arguments bound to the names in `binding...`
 ;;; when applied, binds values to the names and evaluates the expression `body`
 
+;;; Macro:
+;;; (macro binding body)
+;;; defines a procedure with the list of unevaluated arguments bound to `binding`
+;;; see [eval], [pmatch]
+
 ;;; Let:
-;;; (let ((name value)...) body)
-;;; binds each `value` to its `name` within `body`, evauluates body
+;;; (let ((binding value)...) body)
+;;; binds each `value` to its `binding` within `body`, evauluates body
 
 ;;; Quote:
 ;;; (quote expr)
@@ -52,12 +57,17 @@
 ;;; Begin / Define:
 ;;; (begin define-form... body)
 ;;; (define name value)
-;;; (define (name args...) body)
+;;; (define (name binding...) body)
+;;; (define-macro (name binding) body)
 ;;;
 ;;; define forms are only available in a begin form
 ;;; they bind names to values linearly, similar to let
-;;; the second define form is a short hand for
-;;; (define name (lambda (args...) body))
+;;;
+;;; the second define form is a shorthand for
+;;; (define name (lambda (binding...) body))
+;;;
+;;; the third define form is a shorthand for
+;;; (define name (macro binding body))
 ;;;
 ;;; the file itself is included in a begin form,
 ;;; which means you can write define-forms before the result of the file
@@ -71,7 +81,13 @@
 
 ;;; Guard:
 ;;; (guard? (cond body)... fail-body)
-;;; tests each branch form cond and evaluates its body if the cond is truthy.
+;;; tests each cond and evaluates its body if the cond is truthy.
+;;; if none pass, evauluates fail-body.
+
+;;; PMatch:
+;;; (pmatch? value (pattern [guard?] body)... fail-body)
+;;; tests value against each pattern, binding matching values. also tests its
+;;; guard if present and finally evaluates its body if both pass.
 ;;; if none pass, evauluates fail-body.
 
 ;;; Data Types:
