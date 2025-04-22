@@ -23,17 +23,9 @@
 ;;; defines a procedure with arguments bound to the names in `args`
 ;;; when applied, binds values to the names and evaluates the expression `body`
 
-;;; Macro (LIKELY TO BE REMOVED):
-;;; (macro (arg) body)
-;;; defines a macro procedure with a single argument bound to `arg`
-;;; when applied, binds the list of applied arguments to a list as `arg`
-;;; the majority of other builtins are implemented with macro (in rust, but
-;;; using the same mechanism), its how you can customise the syntax (to some
-;;; degree)
-
 ;;; Let:
 ;;; (let ((name value)...) body)
-;;; binds each `value` to its `name` within `body`, evuluates body
+;;; binds each `value` to its `name` within `body`, evauluates body
 
 ;;; Quote:
 ;;; (quote expr)
@@ -57,14 +49,39 @@
 ;;; evaluates an expression, which will run quoted code
 ;;; see [quote], [quasiquote], [unquote]
 
+;;; Begin / Define:
+;;; (begin define-form... body)
+;;; (define name value)
+;;; (define (name args...) body)
+;;;
+;;; define forms are only available in a begin form
+;;; they bind names to values linearly, similar to let
+;;; the second define form is a short hand for
+;;; (define name (lambda (args...) body))
+;;;
+;;; the file itself is included in a begin form,
+;;; which means you can write define-forms before the result of the file
+
+;;; If:
+;;; (if? cond pass-body fail-body)
+;;; evaluates cond. all values except for `#f` and the empty list `(quote ())`
+;;; evaluate as truthy.
+;;; if cond is truthy, evaluates pass-body
+;;; else, evaluates fail-body
+
+;;; Guard:
+;;; (guard? (cond body)... fail-body)
+;;; tests each branch form cond and evaluates its body if the cond is truthy.
+;;; if none pass, evauluates fail-body.
+
 ;;; Data Types:
-;;; procedure / macro-procedure - essentially the same, but are different under
-;;; the hood atm
+;;; procedure - function
 ;;; symbol - single word identifier
 ;;; list - list of other data types
+;;; bool - boolean (#t or #f)
 
 ;;;
 ;;; Hello World:
 ;;;
 
-(quote hello world)
+(quote (hello world))
