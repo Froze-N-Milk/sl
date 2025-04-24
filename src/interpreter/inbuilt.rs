@@ -152,7 +152,7 @@ pub fn embed_eval<'env>(env: Env<'env>) -> Value<'env> {
     Value::Procedure(
         env,
         Rc::new(|env, exprs| match exprs {
-            [expr] => eval(env, expr.clone()),
+            [expr] => eval(env.clone(), eval(env, expr.clone())?),
             _ => panic!("{exprs:#?} did not match any forms of procedure \"eval\""),
         }),
         Rc::new("symbol"),
