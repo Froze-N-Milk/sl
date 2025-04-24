@@ -69,7 +69,10 @@ fn lambda_macro_internal<'env>(
     body: Value<'env>,
 ) -> Value<'env> {
     let procedure = Rc::new(move |env: Env<'env>, args: &[Value<'env>]| {
-        eval(env.bind(env::Value(binding, Value::List(Rc::from(args)))), body.clone())
+        eval(
+            env.bind(env::Value(binding, Value::List(Rc::from(args)))),
+            body.clone(),
+        )
     });
 
     Value::Procedure(env, procedure, Rc::new(binding))
