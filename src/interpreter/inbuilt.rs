@@ -348,9 +348,14 @@ fn structure_match<'env>(env: Env<'env>, l: Value<'env>, r: Value<'env>) -> Resu
             }
             [Value::Symbol("quote"), ..] => panic!("invalid quote form in pmatch"),
             _ => match l {
-                Value::List(l) => l.iter().zip(r.iter()).try_fold(env, |env, (l, r)| {
-                    structure_match(env, l.clone(), r.clone())
-                }),
+                Value::List(l) => {
+                    if l.len() != r.len() {
+                        return Err(());
+                    };
+                    l.iter().zip(r.iter()).try_fold(env, |env, (l, r)| {
+                        structure_match(env, l.clone(), r.clone())
+                    })
+                }
                 _ => Err(()),
             },
         },
