@@ -11,7 +11,7 @@
     (file-union
       "sl"
       `(("src" ,(local-file "./src" #:recursive? #t))
-	("Cargo.toml" ,(local-file "./Cargo.toml")))))
+        ("Cargo.toml" ,(local-file "./Cargo.toml")))))
   (build-system cargo-build-system)
   (synopsis "my own little lisp")
   (description "a pretty mid lisp interpreter")
