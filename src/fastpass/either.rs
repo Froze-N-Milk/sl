@@ -1,5 +1,6 @@
 use super::ErrorMessage;
 
+#[derive(Debug, PartialEq)]
 pub enum Either<L, R> {
 	L(L),
 	R(R),

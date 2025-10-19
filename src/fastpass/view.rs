@@ -71,7 +71,11 @@ impl<'buf> ErrorMessage for View<'buf> {
 		let preceding = &self.source[..self.start];
 		let row = preceding.lines().count();
 		let col = preceding.lines().last().map_or(0, str::len);
-		let out = self.source.lines().nth(if row == 0 { 0 } else { row - 1 }).unwrap_or("");
+		let out = self
+			.source
+			.lines()
+			.nth(if row == 0 { 0 } else { row - 1 })
+			.unwrap_or("");
 		let start = if col <= Self::ATTENTION {
 			0
 		} else {
@@ -96,12 +100,12 @@ impl<'buf> ErrorMessage for View<'buf> {
 
 #[test]
 fn sub_view1() {
-    let v = View::new("12345");
-    assert_eq!("12345", v.as_str());
-    let v = v.sub_view(..4);
-    assert_eq!("1234", v.as_str());
-    let v = v.sub_view(1..);
-    assert_eq!("234", v.as_str());
-    let v = v.sub_view(1..2);
-    assert_eq!("3", v.as_str());
+	let v = View::new("12345");
+	assert_eq!("12345", v.as_str());
+	let v = v.sub_view(..4);
+	assert_eq!("1234", v.as_str());
+	let v = v.sub_view(1..);
+	assert_eq!("234", v.as_str());
+	let v = v.sub_view(1..2);
+	assert_eq!("3", v.as_str());
 }
