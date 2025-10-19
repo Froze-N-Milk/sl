@@ -1,0 +1,3 @@
+(lambda f
+  ((lambda x ((car f) (lambda v (apply ((car x) (car x)) v))))
+   (lambda x ((car f) (lambda v (apply ((car x) (car x)) v))))))

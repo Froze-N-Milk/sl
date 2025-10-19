@@ -1,0 +1,6 @@
+(fix (lambda self
+  (lambda args
+    (if? (0? (car (cdr args)))
+      (car (car args))
+      ((car self) (cdr (car args)) (- (car (cdr args)) 1))))))
+
