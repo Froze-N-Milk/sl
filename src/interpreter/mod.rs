@@ -41,7 +41,7 @@ impl<T> LinkedList<T> {
 #[derive(Clone)]
 pub struct Env {
     explicit: LinkedList<(Rc<str>, Syntax)>,
-    implicit: LinkedList<fn(&str) -> Option<Syntax>>,
+    implicit: LinkedList<fn(&str, &Self) -> Option<Syntax>>,
     pub debug: bool,
     pub ident: usize,
 }
@@ -63,7 +63,7 @@ impl Env {
     fn bind_str(self, sym: &str, value: Syntax) -> Self {
         self.bind(sym.into(), value)
     }
-    fn bind_special(self, f: fn(&str) -> Option<Syntax>) -> Self {
+    fn bind_special(self, f: fn(&str, env: &Self) -> Option<Syntax>) -> Self {
         Self {
             implicit: LinkedList::Cons(Frc::cons((f, self.implicit))),
             ..self
@@ -75,7 +75,7 @@ impl Env {
             false => None,
         }) {
             Some(value) => Some(value),
-            None => self.implicit.first(|f| f(sym)),
+            None => self.implicit.first(|f| f(sym, self)),
         }
     }
     fn with_debug(self, debug: bool) -> Self {
@@ -421,6 +421,13 @@ fn quasiquote(expr: Syntax, env: &Env) -> Syntax {
             Syntax::Proc(Proc::Unquote) => cons.decons().1.extract1().eval(env),
             _ => Syntax::Cons(cons.map(|(car, cdr)| (quasiquote(car, env), quasiquote(cdr, env)))),
         },
+        Syntax::Sym(sym) => match sym.starts_with(',') {
+            true => match env.lookup(&sym[1..]) {
+                Some(v) => v,
+                None => panic!("unbound symbol: {}", &sym[1..]),
+            },
+            false => Syntax::Sym(sym),
+        }
         _ => expr,
     }
 }
@@ -428,9 +435,17 @@ fn quasiquote(expr: Syntax, env: &Env) -> Syntax {
 fn make_env(debug: bool) -> Env {
     Env::new()
         .with_debug(debug)
-        .bind_special(|sym| match sym.parse::<f64>() {
+        .bind_special(|sym, _| match sym.parse::<f64>() {
             Ok(number) => Some(Syntax::Number(number)),
             Err(_) => None,
+        })
+        .bind_special(|sym, _| match sym.starts_with('\'') {
+            true => Some(Syntax::Sym(Rc::from(&sym[1..]))),
+            false => None,
+        })
+        .bind_special(|sym, _| match sym.starts_with('`') {
+            true => Some(Syntax::Sym(Rc::from(&sym[1..]))),
+            false => None,
         })
         .bind_str("#t", Syntax::Bool(true))
         .bind_str("#f", Syntax::Bool(false))

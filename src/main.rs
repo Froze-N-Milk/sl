@@ -5,7 +5,9 @@ use std::fs;
 use fastpass::View;
 
 mod frc;
+mod list;
 mod interpreter;
+mod typed_interpreter;
 
 fn main() {
     let mut args = std::env::args();

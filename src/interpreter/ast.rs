@@ -74,30 +74,6 @@ fn swallow<'buf>(mut buf: View<'buf>) -> ParseResult<'buf, (), Infallible> {
     }
 }
 
-//const NUMBER_LEGALS: &[char] = &['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-//
-//#[inline(always)]
-//fn number<'buf>(buf: View<'buf>) -> ParseResult<'buf, Syntax, NoNumber<'buf>> {
-//    let Ok((buf, res)) = fastpass::CaptureWhile(|_, char| NUMBER_LEGALS.contains(&char)).parse(buf);
-//    match res.parse::<f64>() {
-//        Ok(res) => Ok((buf, Syntax::Number(res))),
-//        Err(_) => Err(NoNumber(buf)),
-//    }
-//}
-
-//#[inline(always)]
-//fn bool<'buf>(buf: View<'buf>) -> ParseResult<'buf, Value, NoBool<'buf>> {
-//	match "#t".or("#f").parse(buf) {
-//		Ok((buf, Either::L(_))) => {
-//			Ok((buf, Value::new_unchecked(Type::Bool, Syntax::Bool(true))))
-//		}
-//		Ok((buf, Either::R(_))) => {
-//			Ok((buf, Value::new_unchecked(Type::Bool, Syntax::Bool(false))))
-//		}
-//		Err(_) => Err(NoBool(buf)),
-//	}
-//}
-
 #[inline(always)]
 fn sexpr<'buf>(
     buf: View<'buf>,
@@ -123,17 +99,21 @@ fn sexpr<'buf>(
 fn expr<'buf>(
     buf: View<'buf>,
 ) -> ParseResult<'buf, Syntax, Either<NoSExpr<'buf>, UnclosedSExpr<'buf>>> {
-    //match bool.then_left(swallow).parse(buf) {
-    //	Ok(res) => return Ok(res),
-    //	_ => (),
-    //};
-    match symbol.then_left(swallow).parse(buf) {
-        Ok(res) => return Ok(res),
-        _ => (),
-    };
-    match sexpr.then_left(swallow).parse(buf) {
-        Ok(res) => Ok(res),
-        Err(Either::L(err)) => Err(err),
+    match symbol.parse(buf) {
+        Ok((buf, sym)) => match sexpr.then_left(swallow).parse(buf) {
+            Ok((buf, sexpr)) => {
+                let arg = Syntax::Cons(Frc::cons((sexpr, Syntax::Nil)));
+                Ok((buf, Syntax::Cons(Frc::cons((sym, arg)))))
+            }
+            Err(_) => {
+                let Ok((buf, _)) = swallow.parse(buf);
+                Ok((buf, sym))
+            }
+        },
+        Err(_) => match sexpr.then_left(swallow).parse(buf) {
+            Ok(res) => Ok(res),
+            Err(Either::L(err)) => Err(err),
+        },
     }
 }
 
